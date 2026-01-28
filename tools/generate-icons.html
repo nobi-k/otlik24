@@ -71,6 +71,10 @@
                 <span>128x128</span>
             </div>
             <div class="icon-box">
+                <canvas id="c64" width="64" height="64"></canvas>
+                <span>64x64</span>
+            </div>
+            <div class="icon-box">
                 <canvas id="c48" width="48" height="48"></canvas>
                 <span>48x48</span>
             </div>
@@ -89,6 +93,7 @@
         </div>
         <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; justify-content: center;">
             <button onclick="downloadIcon(128)">Скачать 128x128</button>
+            <button onclick="downloadIcon(64)">Скачать 64x64</button>
             <button onclick="downloadIcon(48)">Скачать 48x48</button>
             <button onclick="downloadIcon(32)">Скачать 32x32</button>
             <button onclick="downloadIcon(16)">Скачать 16x16</button>
@@ -111,7 +116,7 @@
             const url = URL.createObjectURL(blob);
             
             img.onload = function() {
-                const sizes = [128, 48, 32, 16];
+                const sizes = [128, 64, 48, 32, 16];
                 sizes.forEach(size => {
                     const canvas = document.getElementById('c' + size);
                     const ctx = canvas.getContext('2d');
@@ -132,7 +137,7 @@
         }
 
         function downloadAll() {
-            [128, 48, 32, 16].forEach(size => {
+            [128, 64, 48, 32, 16].forEach(size => {
                 setTimeout(() => downloadIcon(size), size * 200);
             });
         }
