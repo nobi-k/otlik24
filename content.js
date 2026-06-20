@@ -68,7 +68,11 @@ const utils = {
 
     // Закрыть открытую модалку (чтобы не блокировала следующие клики)
     closeModal: () => {
-        const close = document.querySelector('[data-qa="modal-close"], [data-qa="bloko-modal-close"], .bloko-modal-close');
+        const close = document.querySelector(
+            '[data-qa="modal-close"], [data-qa="magritte-modal-close-button"], ' +
+            '[data-qa="bloko-modal-close"], .bloko-modal-close, ' +
+            '[role="dialog"] button[aria-label*="акрыть"]'
+        );
         if (close) { close.click(); return; }
         // Запасной вариант — Escape
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
@@ -96,10 +100,10 @@ async function incrementDailyCount() {
 
 async function handleModal(vacancyId) {
     try {
-        const modal = await utils.waitForElement('[data-qa="vacancy-response-popup-form-letter-input"], [data-qa="vacancy-response-submit-popup"], .bloko-modal', 4000);
+        const modal = await utils.waitForElement('[data-qa="vacancy-response-popup-form-letter-input"], [data-qa="vacancy-response-submit-popup"], [role="dialog"], .magritte-modal, .bloko-modal', 4000);
         if (!modal) return false;
 
-        const modalRoot = modal.closest('.bloko-modal, [data-qa="bloko-modal"]') || document;
+        const modalRoot = modal.closest('[role="dialog"], .magritte-modal, .bloko-modal, [data-qa="bloko-modal"]') || document;
         const modalText = (modalRoot.innerText || "").toLowerCase();
 
         // Детектор тестов — ТОЛЬКО внутри модалки/страницы отклика, не по всей странице
@@ -129,7 +133,7 @@ async function handleModal(vacancyId) {
                 await utils.wait(800);
             }
 
-            const textarea = await utils.waitForElement('[data-qa="vacancy-response-popup-form-letter-input"], .bloko-modal textarea', 3000);
+            const textarea = await utils.waitForElement('[data-qa="vacancy-response-popup-form-letter-input"], [role="dialog"] textarea, .magritte-modal textarea, .bloko-modal textarea', 3000);
             if (textarea) {
                 utils.triggerInputChange(textarea, currentConfig.coverLetterText);
                 await utils.wait(500);
@@ -137,7 +141,7 @@ async function handleModal(vacancyId) {
         }
 
         const submitBtn = document.querySelector('[data-qa="vacancy-response-submit-popup"]') ||
-            Array.from(document.querySelectorAll('.bloko-modal button.bloko-button_kind-primary, .bloko-modal button')).find(b => b.innerText.includes('Откликнуться'));
+            Array.from(document.querySelectorAll('[role="dialog"] button, .magritte-modal button, .bloko-modal button')).find(b => b.innerText.includes('Откликнуться'));
 
         if (submitBtn && isRunning) {
             submitBtn.click();
@@ -180,7 +184,13 @@ async function runAutomation() {
 
             const vacancyContainer = btn.closest('[data-qa="vacancy-serp__vacancy"]') || btn.closest('article');
             const title = vacancyContainer?.innerText.toLowerCase() || "";
-            const vacancyId = btn.href?.match(/\/vacancy\/(\d+)/)?.[1] || btn.href;
+            // HH (Magritte): кнопка отклика = ссылка вида
+            // /applicant/vacancy_response?vacancyId=NNN — id берём из vacancyId,
+            // запасной вариант — ссылка с заголовка карточки (/vacancy/NNN).
+            const vacancyId =
+                btn.href?.match(/[?&]vacancyId=(\d+)/)?.[1] ||
+                vacancyContainer?.querySelector('a[href*="/vacancy/"]')?.href.match(/\/vacancy\/(\d+)/)?.[1] ||
+                btn.href;
 
             if (responded.has(vacancyId)) continue;
 
