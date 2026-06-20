@@ -68,13 +68,15 @@ const utils = {
 
     // Закрыть открытую модалку (чтобы не блокировала следующие клики)
     closeModal: () => {
-        const close = document.querySelector(
-            '[data-qa="modal-close"], [data-qa="magritte-modal-close-button"], ' +
-            '[data-qa="bloko-modal-close"], .bloko-modal-close, ' +
-            '[role="dialog"] button[aria-label*="акрыть"]'
+        // HH Magritte: кнопка закрытия окна отклика = data-qa="response-popup-close"
+        const closeEl = document.querySelector(
+            '[data-qa="response-popup-close"], [data-qa="modal-close"], ' +
+            '[data-qa="magritte-modal-close-button"], [data-qa="bloko-modal-close"], ' +
+            '.bloko-modal-close, [role="dialog"] button[aria-label*="акрыть"]'
         );
-        if (close) { close.click(); return; }
-        // Запасной вариант — Escape
+        const closeBtn = closeEl ? (closeEl.closest('button,[role="button"]') || closeEl) : null;
+        if (closeBtn) closeBtn.click();
+        // Escape как надёжный запасной вариант (проверено на живом HH)
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
     }
 };
@@ -125,8 +127,11 @@ async function handleModal(vacancyId) {
 
         // Сопроводительное письмо
         if (currentConfig.coverLetterText) {
-            const addLetterBtn = document.querySelector('[data-qa="vacancy-response-letter-toggle"]') ||
-                Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes('сопроводительное'));
+            // HH Magritte: тумблер письма теперь data-qa="add-cover-letter"
+            // (старый vacancy-response-letter-toggle оставлен как фолбэк)
+            const addLetterBtn = document.querySelector('[data-qa="add-cover-letter"]') ||
+                document.querySelector('[data-qa="vacancy-response-letter-toggle"]') ||
+                Array.from(document.querySelectorAll('[role="dialog"] button, .magritte-modal button, button')).find(b => b.innerText.toLowerCase().includes('сопроводительное'));
 
             if (addLetterBtn && !document.querySelector('[data-qa="vacancy-response-popup-form-letter-input"]')) {
                 addLetterBtn.click();
